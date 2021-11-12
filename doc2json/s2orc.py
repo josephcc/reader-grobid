@@ -140,7 +140,8 @@ class BibliographyEntry:
             num: Optional[int] = None,
             urls: Optional[List] = None,
             raw_text: Optional[str] = None,
-            links: Optional[List] = None
+            links: Optional[List] = None,
+            coords: List[Dict[str, float]] = []
     ):
         self.bib_id = bib_id
         self.ref_id = ref_id
@@ -156,6 +157,7 @@ class BibliographyEntry:
         self.urls = urls
         self.raw_text = raw_text
         self.links = links
+        self.coords = coords
 
     def as_json(self):
         return {
@@ -171,7 +173,8 @@ class BibliographyEntry:
             "num": self.num,
             "urls": self.urls,
             "raw_text": self.raw_text,
-            "links": self.links
+            "links": self.links,
+            "coords": self.coords
         }
 
 

@@ -275,6 +275,17 @@ def process_citations_in_paragraph(para_el: BeautifulSoup, sp: BeautifulSoup, bi
 
     for rtag in para_el.find_all('ref'):
         try:
+            raw_coord = rtag.attrs.get("coords", None)
+            coord = ''
+            if raw_coord != None:
+                coord = list(map(float, raw_coord.split(',')))
+                coord = {
+                    'page': coord[0],
+                    'left': coord[1],
+                    'top': coord[2],
+                    'width': coord[3],
+                    'height': coord[4]
+                }
             # get surface span, e.g. [3]
             surface_span = rtag.text.strip()
 
@@ -287,7 +298,7 @@ def process_citations_in_paragraph(para_el: BeautifulSoup, sp: BeautifulSoup, bi
                 if rtag_ref_id not in bibs:
                     cite_key = tokgen.next()
                     rtag.replace_with(sp.new_string(f" {cite_key} "))
-                    cite_map[cite_key] = (None, surface_span)
+                    cite_map[cite_key] = (None, surface_span, coord)
                     continue
 
                 # if bracket style, only keep if surface form is bracket
@@ -303,7 +314,7 @@ def process_citations_in_paragraph(para_el: BeautifulSoup, sp: BeautifulSoup, bi
                 else:
                     cite_key = tokgen.next()
                     rtag.replace_with(sp.new_string(f" {cite_key} "))
-                    cite_map[cite_key] = (rtag_ref_id, surface_span)
+                    cite_map[cite_key] = (rtag_ref_id, surface_span, coord)
                     continue
 
                 ### EXTRA PROCESSING FOR BRACKET STYLE CITATIONS; EXPAND RANGES ###
@@ -348,10 +359,10 @@ def process_citations_in_paragraph(para_el: BeautifulSoup, sp: BeautifulSoup, bi
                             # only replace if ref id is in bibliography, else add none
                             if range_ref_id in bibs:
                                 cite_key = tokgen.next()
-                                cite_map[cite_key] = (range_ref_id, range_surface_form)
+                                cite_map[cite_key] = (range_ref_id, range_surface_form, coord)
                             else:
                                 cite_key = tokgen.next()
-                                cite_map[cite_key] = (None, range_surface_form)
+                                cite_map[cite_key] = (None, range_surface_form, coord)
                             replace_string += cite_key + ' '
                         rtag.replace_with(sp.new_string(f" {replace_string} "))
                     # ELSE do not expand backwards and replace previous and current rtag with appropriate ref id
@@ -362,12 +373,12 @@ def process_citations_in_paragraph(para_el: BeautifulSoup, sp: BeautifulSoup, bi
                         previous_rtag_surface = previous_rtag.text.strip()
                         cite_key = tokgen.next()
                         previous_rtag.replace_with(sp.new_string(f" {cite_key} "))
-                        cite_map[cite_key] = (previous_rtag_ref_id, previous_rtag_surface)
+                        cite_map[cite_key] = (previous_rtag_ref_id, previous_rtag_surface, coord)
 
                         # add mapping between ref id and surface form for current reftag
                         cite_key = tokgen.next()
                         rtag.replace_with(sp.new_string(f" {cite_key} "))
-                        cite_map[cite_key] = (rtag_ref_id, surface_span)
+                        cite_map[cite_key] = (rtag_ref_id, surface_span, coord)
                 else:
                     # look forward and see if expansion string, e.g. *[1]*-[3]
                     forward_between_span = ""
@@ -386,12 +397,12 @@ def process_citations_in_paragraph(para_el: BeautifulSoup, sp: BeautifulSoup, bi
                     else:
                         cite_key = tokgen.next()
                         rtag.replace_with(sp.new_string(f" {cite_key} "))
-                        cite_map[cite_key] = (rtag_ref_id, surface_span)
+                        cite_map[cite_key] = (rtag_ref_id, surface_span, coord)
 
             else:
                 cite_key = tokgen.next()
                 rtag.replace_with(sp.new_string(f" {cite_key} "))
-                cite_map[cite_key] = (None, surface_span)
+                cite_map[cite_key] = (None, surface_span, coord)
         except AttributeError:
             continue
 
@@ -443,7 +454,7 @@ def process_paragraph(
     all_spans_to_replace = []
     for span in re.finditer(r'(CITETOKEN\d+)', para_text):
         uniq_token = span.group()
-        ref_id, surface_text = cite_map[uniq_token]
+        ref_id, surface_text, _ = cite_map[uniq_token]
         all_spans_to_replace.append((
             span.start(),
             span.start() + len(uniq_token),
@@ -467,7 +478,8 @@ def process_paragraph(
         "start": start,
         "end": end,
         "text": surface,
-        "ref_id": cite_map[token][0]
+        "ref_id": cite_map[token][0],
+        "coord": cite_map[token][-1]
     } for start, end, token, surface in all_spans_to_replace if token.startswith('CITETOKEN')]
 
     ref_span_blobs = [{

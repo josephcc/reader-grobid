@@ -346,6 +346,24 @@ def get_publication_datetime_from_grobid_xml(raw_xml: BeautifulSoup) -> str:
     return ""
 
 
+def get_coords_from_grobid_xml(bib_entry: BeautifulSoup) -> str:
+    raw_coords = bib_entry.attrs.get("coords", None)
+    if raw_coords == None:
+        return []
+
+    coords = raw_coords.split(';')
+    coords = [elem.split(',') for elem in coords]
+    coords = [list(map(float, elem)) for elem in coords]
+    coords = [{
+        'page': elem[0],
+        'left': elem[1],
+        'top': elem[2],
+        'width': elem[3],
+        'height': elem[4],
+    } for elem in coords]
+    return coords
+
+
 def parse_bib_entry(bib_entry: BeautifulSoup) -> Dict:
     """
     Parse one bib entry
@@ -354,7 +372,9 @@ def parse_bib_entry(bib_entry: BeautifulSoup) -> Dict:
     """
     clean_tags(bib_entry)
     title = get_title_from_grobid_xml(bib_entry)
+    coords = get_coords_from_grobid_xml(bib_entry)
     return {
+        'coords': coords,
         'ref_id': bib_entry.attrs.get("xml:id", None),
         'title': title,
         'authors': get_author_names_from_grobid_xml(bib_entry),

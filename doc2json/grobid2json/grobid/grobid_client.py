@@ -26,6 +26,8 @@ DEFAULT_GROBID_CONFIG = {
     "consolidate_header": False,
     "consolidate_citations": False,
     "include_raw_citations": True,
+    "segment_sentences": True,
+    "include_coordinates": ['s', 'bib', 'biblStruct', 'ref'],
     "include_raw_affiliations": False,
     "max_workers": 2,
 }
@@ -39,6 +41,8 @@ class GrobidClient(ApiClient):
         self.consolidate_citations = self.config["consolidate_citations"]
         self.include_raw_citations = self.config["include_raw_citations"]
         self.include_raw_affiliations = self.config["include_raw_affiliations"]
+        self.include_coordinates = self.config["include_coordinates"]
+        self.segment_sentences = self.config["segment_sentences"]
         self.max_workers = self.config["max_workers"]
         self.grobid_server = self.config["grobid_server"]
         self.grobid_port = self.config["grobid_port"]
@@ -105,6 +109,19 @@ class GrobidClient(ApiClient):
             the_data['includeRawCitations'] = '1'
         else:
             the_data['includeRawCitations'] = '0'
+
+        if self.segment_sentences:
+            the_data['segmentSentences'] = '1'
+        else:
+            the_data['segmentSentences'] = '0'
+
+        if self.segment_sentences:
+            the_data['segmentSentences'] = '1'
+        else:
+            the_data['segmentSentences'] = '0'
+
+        if self.include_coordinates:
+            the_data['teiCoordinates'] = self.include_coordinates
 
         res, status = self.post(
             url=the_url,
