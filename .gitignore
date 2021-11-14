@@ -4,3 +4,4 @@
 tests/output/*
 tests/temp/*
 .DS_Store
+doc2json/flask/secrets.py
