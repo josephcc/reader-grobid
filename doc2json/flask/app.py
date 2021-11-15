@@ -88,8 +88,8 @@ def convertToScholarPhiFormat(grobid):
                 refId2S2[ref] = data['paperId']
             except Exception as exc:
                 print('%r generated an exception: %s' % (ref, exc))
-            else:
-                print('%r page is %d bytes' % (ref, data and len(data) or 0))
+#            else:
+#                print('%r page is %d bytes' % (ref, data and len(data) or 0))
 
 
     citations = list(filter(lambda citation: citation['id'] in refId2S2, citations))

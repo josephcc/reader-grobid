@@ -278,6 +278,8 @@ def process_citations_in_paragraph(para_el: BeautifulSoup, sp: BeautifulSoup, bi
             raw_coord = rtag.attrs.get("coords", None)
             coord = ''
             if raw_coord != None:
+                raw_coord = raw_coord.split(';')[0]
+                print(raw_coord)
                 coord = list(map(float, raw_coord.split(',')))
                 coord = {
                     'page': coord[0],
@@ -403,7 +405,8 @@ def process_citations_in_paragraph(para_el: BeautifulSoup, sp: BeautifulSoup, bi
                 cite_key = tokgen.next()
                 rtag.replace_with(sp.new_string(f" {cite_key} "))
                 cite_map[cite_key] = (None, surface_span, coord)
-        except AttributeError:
+        except Exception as exception:
+            print(exception)
             continue
 
     return cite_map
