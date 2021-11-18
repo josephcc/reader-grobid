@@ -12,7 +12,7 @@ from doc2json.grobid2json.process_pdf import process_pdf_stream
 from doc2json.tex2json.process_tex import process_tex_stream
 from doc2json.jats2json.process_jats import process_jats_stream
 
-from queryS2 import apiGet
+from queryS2 import bibLinkingApiPost
 
 
 app = Flask(__name__)
@@ -69,35 +69,21 @@ def convertToScholarPhiFormat(grobid):
                 citations[ref_id]['attributes']['bounding_boxes'].append(cite_span['coord'])
     citations = citations.values()
         
-    refId2S2 = {}
     bibs = grobid['pdf_parse']['bib_entries']
-    def fetch(ref):
-        title = bibs[ref]['title']
-        query = apiGet('Query', title)
-        if len(query.get('data', [])) == 0:
-            return None
-        query = query['data'][0]
-        return query
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=100) as executor:
-        future_to_ref = {executor.submit(fetch, ref): ref for ref in allRefs}
-        for future in concurrent.futures.as_completed(future_to_ref):
-            ref = future_to_ref[future]
-            try:
-                data = future.result()
-                refId2S2[ref] = data['paperId']
-            except Exception as exc:
-                print('%r generated an exception: %s' % (ref, exc))
-#            else:
-#                print('%r page is %d bytes' % (ref, data and len(data) or 0))
+    allRefs = list(allRefs)
+    titles = [bibs[ref]['title'] for ref in allRefs]
+    corpusIds = bibLinkingApiPost(titles)
+    refId2corpId = dict(filter(lambda ref_corp: ref_corp[1] >= 0, zip(allRefs, corpusIds)))
+    print(refId2corpId)
 
-
-    citations = list(filter(lambda citation: citation['id'] in refId2S2, citations))
+    citations = list(filter(lambda citation: citation['id'] in refId2corpId, citations))
     for citation in citations:
-        s2Id = refId2S2[citation['id']]
+        s2Id = str(refId2corpId[citation['id']])
         citation['id'] = s2Id
         citation['attributes']['paper_id'] = s2Id
 
+    pprint(citations)
     return {'entities': citations}
 
 @app.route('/')

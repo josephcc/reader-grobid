@@ -279,7 +279,6 @@ def process_citations_in_paragraph(para_el: BeautifulSoup, sp: BeautifulSoup, bi
             coord = ''
             if raw_coord != None:
                 raw_coord = raw_coord.split(';')[0]
-                print(raw_coord)
                 coord = list(map(float, raw_coord.split(',')))
                 coord = {
                     'page': coord[0],
