@@ -17,8 +17,12 @@ slightly sub-optimal, but should scale better. However acquiring a list of milli
 require something scalable too, which is not implemented for the moment.
 '''
 
+SERVER = 'localhost'
+if 'GROBID_URL' in os.environ:
+    SERVER = os.environ['GROBID_URL']
+
 DEFAULT_GROBID_CONFIG = {
-    "grobid_server": "localhost",
+    "grobid_server": SERVER,
     "grobid_port": "8070",
     "batch_size": 1000,
     "sleep_time": 5,
