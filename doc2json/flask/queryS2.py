@@ -1,6 +1,9 @@
+import os
 import requests
 import json
-from secrets import APIKEY
+
+APIKEY = os.getenv('S2_PARTNER_KEY') or ''
+
 
 BASEURL = 'partner.semanticscholar.org'
 HEADERS = {'X-API-KEY': APIKEY}
@@ -25,5 +28,3 @@ def bibLinkingApiPost(titles):
 
     response = requests.request("POST", ENDPOINTS['BibMatch'], headers=headers, data=payload).json()
     return response
-
-    

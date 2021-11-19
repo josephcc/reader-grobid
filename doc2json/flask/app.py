@@ -49,7 +49,7 @@ def convertToScholarPhiFormat(grobid):
             continue
         for cite_span in cite_spans:
             # scholarphi pages starts at index 0, but grobid starts at 1
-            cite_span['coord']['page'] -= 1 
+            cite_span['coord']['page'] -= 1
             ref_id = cite_span['ref_id']
 
             if not (ref_id in citations):
@@ -68,14 +68,13 @@ def convertToScholarPhiFormat(grobid):
             else:
                 citations[ref_id]['attributes']['bounding_boxes'].append(cite_span['coord'])
     citations = citations.values()
-        
+
     bibs = grobid['pdf_parse']['bib_entries']
 
     allRefs = list(allRefs)
     titles = [bibs[ref]['title'] for ref in allRefs]
     corpusIds = bibLinkingApiPost(titles)
     refId2corpId = dict(filter(lambda ref_corp: ref_corp[1] >= 0, zip(allRefs, corpusIds)))
-    print(refId2corpId)
 
     citations = list(filter(lambda citation: citation['id'] in refId2corpId, citations))
     for citation in citations:
@@ -83,7 +82,6 @@ def convertToScholarPhiFormat(grobid):
         citation['id'] = s2Id
         citation['attributes']['paper_id'] = s2Id
 
-    pprint(citations)
     return {'entities': citations}
 
 @app.route('/')
